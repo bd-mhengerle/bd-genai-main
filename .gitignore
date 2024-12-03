@@ -1,0 +1,9 @@
+.idea
+.venv
+**/__pycache__
+**/.vscode
+
+key.json
+web-app/.env
+
+.DS_Store

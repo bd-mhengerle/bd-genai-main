@@ -1,0 +1,145 @@
+
+
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - repo_url: ${args.repo_url}
+          - bucket: ${args.bucket}
+          - project_id: ${args.project_id}
+          - region: ${args.region}
+          - cache_freshness: ${args.cache_freshness}
+          - index_name: ${args.index_name}
+          - max_iterations: 100
+          - iter_counter: 0
+
+    - call github_sync_service:
+        call: googleapis.run.v2.projects.locations.jobs.run
+        args:
+          name: ${"projects/" + project_id + "/locations/" + region + "/jobs/gh-service"}
+          body:
+            overrides:
+              containerOverrides:
+                args: [
+                    "convert.py",
+                    "--repo_url", "${repo_url}", 
+                    "--bucket", "${bucket}"
+                ]
+        result: github_sync_result
+
+    - log_result:
+        call: sys.log
+        args:
+          text: ${github_sync_result}
+
+    - while_loop_image_desc:
+        switch:
+          - condition: ${iter_counter < max_iterations}
+            next: call_image_desc_function
+
+          - condition: true
+            steps:
+              - log_max_iterations:
+                  call: sys.log
+                  args:
+                    text: "Maximum iterations reached for image description function: ${iter_counter}"
+            next: reset_counter
+    
+    - call_image_desc_function:
+        call: http.post
+        args:
+          url: https://us-central1-bd-genai-internal.cloudfunctions.net/github_pipeline_describe_images
+          auth:
+            type: OIDC
+          body:
+            bucket: ${bucket}
+            cache_freshness: ${cache_freshness}
+            batch_size: 10
+        result: function_result
+
+    - check_response:
+        switch:
+          - condition: ${function_result.body.result == "DONE"}
+            next: print_message
+          
+          - condition: ${function_result.body.result == "CONTINUE"}
+            steps:
+              - increment_counter:
+                  assign:
+                    - iter_counter: ${iter_counter + 1}
+            next: while_loop_image_desc
+
+          - condition: true
+            steps:
+                - log_error:
+                    call: sys.log
+                    args:
+                        text: "Unexpected result from the image description function: ${function_result.body.result}"
+
+    - print_message:
+        call: sys.log
+        args:
+          text: "Image description function completed successfully"
+        next: reset_counter
+    
+    - reset_counter:
+        assign:
+          - iter_counter: 0
+        next: while_loop_load_pinecone
+
+    - while_loop_load_pinecone:
+        switch:
+          - condition: ${iter_counter < max_iterations}
+            next: call_load_pinecone_service
+
+          - condition: true
+            steps:
+              - log_max_iterations_2:
+                  call: sys.log
+                  args:
+                    text: "Maximum iterations reached for load_pinecone service: ${iter_counter}"
+            next: exit_workflow
+    
+    - call_load_pinecone_service:
+        call: http.post
+        args:
+          url: https://github-pipeline-load-pinecone-1085653060506.us-central1.run.app/load-pinecone
+          auth:
+            type: OIDC
+          body:
+            bucket_name: ${bucket}
+            index_name: ${index_name}
+            batch_size: 30
+            cache_freshness: ${cache_freshness}
+        result: service_result
+
+    - check_response_2: 
+        switch:
+            - condition: ${service_result.body.result == "DONE"}
+              next: print_message_2
+
+            - condition: ${service_result.body.result == "CONTINUE"}
+              steps:
+                - increment_counter_2:
+                    assign:
+                        - iter_counter: ${iter_counter + 1}
+              next: while_loop_load_pinecone
+            
+            - condition: true
+              steps:
+                - log_error_2:
+                    call: sys.log
+                    args:
+                        text: "Unexpected result from load_pinecone service: ${service_result.body.result}"
+
+    - print_message_2:
+        call: sys.log
+        args:
+            text: "Pinecone load service complete."
+
+                  
+    - exit_workflow:
+        call: sys.log
+        args:
+          text: "Exiting workflow"

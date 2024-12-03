@@ -1,0 +1,4 @@
+run.bat
+test-run.sh
+deploy.sh
+deploy-service.sh

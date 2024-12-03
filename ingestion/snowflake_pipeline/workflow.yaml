@@ -1,0 +1,69 @@
+main:
+  params: [args]
+  steps:
+
+    - init:
+        assign:
+          - snowflake_source: ${args.snowflake_source}
+          - batch_size: ${args.batch_size}
+          - truncate: ${args.truncate} 
+          - max_iterations: 100
+          - iter_counter: 0
+
+    - while_loop:
+        switch:
+            - condition: ${iter_counter < max_iterations}
+              next: call_load_pinecone_service
+
+            - condition: true 
+              steps:
+                - log_max_iterations:
+                    call: sys.log
+                    args:
+                        text: "Maximum iterations reached for snowflake -> pinecone service: ${string(iter_counter)}"
+              next: exit_workflow
+    
+    - call_load_pinecone_service:
+        call: http.post
+        args:
+          url: https://snowflake-pipeline-load-pinecone-1085653060506.us-central1.run.app/load-pinecone
+          auth:
+            type: OIDC
+          body:
+            snowflake_source: ${snowflake_source}
+            batch_size: ${batch_size}
+            truncate: ${truncate}
+        result: service_result
+
+    - check_response:
+        switch:
+            - condition: ${service_result.body.result == "DONE"}
+              next: print_workflow_complete
+            
+            - condition: ${service_result.body.result == "CONTINUE"}
+              steps:
+                - increment_counter:
+                    assign:
+                        - iter_counter: ${iter_counter + 1}
+                - print_iteration:
+                    call: sys.log
+                    args:
+                        text: "Iteration number: ${iter_counter}"
+              next: while_loop
+
+            - condition: true
+              steps:
+                - log_error:
+                    call: sys.log
+                    args:
+                      text: "Unexpected result from snowflake -> pinecone service. View service logs."
+
+    - print_workflow_complete:
+        call: sys.log
+        args:
+            text: 'Service returned "DONE".'
+        
+    - exit_workflow:
+        call: sys.log
+        args:
+            text: "Exiting workflow"

@@ -1,0 +1,200 @@
+# REQUIRED ARGUMENTS: project_id, region, drive_folder_id, drive_kbs_bucket
+
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - project_id: ${args.project_id}
+          - region: ${args.region}
+          - drive_folder_id: ${args.drive_folder_id}
+          - drive_kbs_bucket: ${args.drive_kbs_bucket}
+          - max_iterations: 100
+          - iter_counter: 0
+
+    - call_drive_sync_service:
+        call: googleapis.run.v2.projects.locations.jobs.run
+        args:
+          name: ${"projects/" + project_id + "/locations/" + region + "/jobs/drive-sync-service"}
+          body:
+            overrides:
+              containerOverrides:
+                args: [
+                    "python", "main.py",
+                    "--principal", "svc_genai-concierge@bostondynamics.com", 
+                    "--folder_id", "${drive_folder_id}", 
+                    "--bucket", "${drive_kbs_bucket}"
+                ]
+        result: drive_sync_result
+
+    - log_result:
+        call: sys.log
+        args:
+          text: ${drive_sync_result}
+      
+    - while_loop:
+        switch:
+          - condition: ${iter_counter < max_iterations}
+            next: call_convert_docx_function
+
+          - condition: true
+            steps:
+              - log_max_iterations:
+                  call: sys.log
+                  args:
+                    text: "Maximum iterations reached for docx conversion function"
+            next: reset_counter
+
+    - call_convert_docx_function:
+        call: http.post
+        args:
+          url: https://us-central1-bd-genai-internal.cloudfunctions.net/drive_pipeline_convert_docx
+          auth:
+            type: OIDC
+          body:
+            bucket: ${drive_kbs_bucket}
+            folder_id: ${drive_folder_id}
+            batch_size: 10
+        result: function_result
+
+    - check_response:
+        switch:
+          - condition: ${function_result.body.result == "DONE"} 
+            next: print_message
+
+          - condition: ${function_result.body.result == "CONTINUE"}
+            steps:
+              - increment_counter:
+                  assign:
+                    - iter_counter: ${iter_counter + 1}
+            next: while_loop
+
+          - condition: true
+            steps:
+              - log_error:
+                  call: sys.log
+                  args:
+                    text: "Unexpected response from the function: ${function_result.body.result}"
+
+    - print_message:
+        call: sys.log
+        args:
+          text: "Docx -> PDF Function returned DONE. Moving on to the next step."
+        next: reset_counter
+
+    - reset_counter:
+        assign:
+          - iter_counter: 0
+        next: while_loop_2
+    
+    - while_loop_2:
+        switch:
+          - condition: ${iter_counter < max_iterations}
+            next: call_describe_images_function
+
+          - condition: true
+            steps:
+              - log_max_iterations_2:
+                  call: sys.log
+                  args:
+                    text: "Maximum loop iterations reached for image description."
+            next: reset_counter_2
+
+    - call_describe_images_function:
+        call: http.post
+        args:
+            url: https://us-central1-bd-genai-internal.cloudfunctions.net/drive_pipeline_describe_images
+            auth:
+                type: OIDC
+            body:
+                bucket: ${drive_kbs_bucket}
+                folder_id: ${drive_folder_id}
+                batch_size: 10
+        result: function_result
+
+    - check_result_2:
+        switch:
+            - condition: ${function_result.body.result == "DONE"}
+              next: print_message_2
+
+            - condition: ${function_result.body.result == "CONTINUE"}
+              steps:
+                - increment_counter_2:
+                    assign:
+                        - iter_counter: ${iter_counter + 1}
+              next: while_loop_2
+            
+            - condition: true
+              steps:
+                - log_error_2:
+                    call: sys.log
+                    args:
+                        text: "Unexpected response from the function: ${function_result.body.result}"
+    
+    - print_message_2:
+        call: sys.log
+        args:
+            text: "Image description function returned DONE. Moving on to the next step."
+        next: reset_counter_2
+    
+    - reset_counter_2:
+        assign:
+            - iter_counter: 0
+        next: while_loop_3
+
+    - while_loop_3:
+        switch:
+            - condition: ${iter_counter < max_iterations}
+              next: call_load_pinecone_service
+
+            - condition: true
+              steps:
+                - log_max_iterations_3:
+                    call: sys.log
+                    args:
+                        text: "Maximum loop iterations reached for load pinecone service."
+              next: exit_workflow
+
+    
+    - call_load_pinecone_service:
+        call: http.post
+        args:
+            url: https://drive-pipeline-load-pinecone-fi44jh47aa-uc.a.run.app/load-drive-files
+            auth:
+                type: OIDC
+            body:
+                project: ${project_id}
+                bucket: ${drive_kbs_bucket}
+                folder_id: ${drive_folder_id}
+                index_name: genai-sandbox
+                batch_size: 30
+        result: service_result
+
+    - check_result_3:
+        switch:
+            - condition: ${service_result.body.result == "DONE"}
+              next: print_message_3
+
+            - condition: ${service_result.body.result == "CONTINUE"}
+              steps:
+                - increment_counter_3:
+                    assign:
+                      - iter_counter: ${iter_counter + 1}
+              next: while_loop_3
+
+            - condition: true
+              steps:
+                - log_error_3:
+                    call: sys.log
+                    args:
+                        text: "Unexpected result from the service: ${service_result.body.result}"
+    
+    - print_message_3:
+        call: sys.log
+        args:
+            text: "Pinecone insert service returned DONE."
+
+    - exit_workflow:
+        call: sys.log
+        args:
+            text: "Exiting workflow."

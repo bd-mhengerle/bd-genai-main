@@ -1,0 +1,7 @@
+GitPython==3.1.43
+Markdown==3.6
+pdfkit==1.0.0
+beautifulsoup4==4.12.3
+gh-md-to-html==1.21.3
+gcsfs==2024.6.1
+google-cloud-logging==3.11.0

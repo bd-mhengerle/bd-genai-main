@@ -1,0 +1,343 @@
+.App {
+  text-align: center;
+}
+.body {
+  overflow: hidden;
+  height: 100vh;
+}
+
+.header {
+  grid-column: 1/4;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background-color: var(--background); /* Adjust the background color as needed */
+}
+
+.nav-list {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;  /* Ensures the nav takes full header width */
+}
+
+.menu {
+  display: flex;
+  align-items: center;
+}
+
+
+.chat-dropdown {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 19.5px;
+  letter-spacing: -0.02em;
+  text-align: center;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px 10px;
+  margin: 0;
+  appearance: none; /* Remove default styling */
+  -webkit-appearance: none; /* Remove default styling for Safari */
+  padding-right: 25px; /* Space for the arrow */
+}
+
+.header .logo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 24px; /* Adjust the font size as needed */
+  color: var(--logo-color); /* Adjust the color as needed */
+  cursor: pointer;
+}
+
+.superscript {
+  vertical-align: super;
+  font-size: smaller;
+}
+
+.header nav ul {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+.header nav ul li {
+  margin-left: 20px;
+}
+
+.header nav ul li img {
+  width: 20px;
+  height: 20px;
+}
+
+.profile-initials {
+  width: 30px; /* Adjust size as needed */
+  height: 30px; /* Adjust size as needed */
+  background-color: var(--bg-color-initials); /* Blue background, you can change the color */
+  color: var(--font-color-initials);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%; /* This makes the div a circle */
+  font-size: 16px; /* Adjust size as needed */
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+.profile-initials:hover {
+  background-color: var(--bg-color-initials-hover);
+}
+
+.star-icon path {
+  stroke: #B0B0B0; /* Gray border */
+  fill: none; /* Initial fill color (unfilled state) */
+}
+
+.star-icon.filled path {
+  fill: #0590C8; /* Fill color for the filled state */
+  stroke: #0590C8; /* Match the stroke color when filled */
+}
+
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: white;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  right: -20%;
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {
+  background-color: #f1f1f1;
+}
+
+/* New CSS for showing dropdown on hover */
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+
+.header-dropdown {
+  position: relative;
+  display: inline-block;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.header-dropdown-content {
+  display: block;
+  position: absolute;
+  background-color: var(--background);
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  right: -20%;
+  top: 40px;
+}
+
+.header-dropdown-content a {
+  color: var(--font-color);
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  cursor: pointer;
+}
+
+.header-dropdown-content a:hover {
+  background-color: var(--background-hover);
+}
+
+.toggle {
+  cursor: pointer;
+  font-weight: bold;
+  transform: rotate(-90deg);
+}
+
+.input-pill {
+  border: none;
+  padding: 10px 10px;
+  border-bottom: 0.5px solid #5F697C;
+  width: 100%;
+  font-size: 12px;
+  font-weight: 500;
+  color: #00355A;
+}
+
+.rectangle-overlay {
+  position: absolute;
+  top: 35%;
+  left: 33%;
+}
+
+.stop-icon {
+  display: block;
+}
+
+@keyframes gradient {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
+
+/* HTML: <div class="loader"></div> */
+.assistant-waiting {
+  width: 60px;
+  aspect-ratio: 2;
+  --_g: no-repeat radial-gradient(circle closest-side,var(--regular-font-color) 90%,#0000);
+  background: 
+    var(--_g) 0%   50%,
+    var(--_g) 50%  50%,
+    var(--_g) 100% 50%;
+  background-size: calc(100%/3) 40%;
+  animation: l3 1s infinite linear;
+}
+@keyframes l3 {
+    20%{background-position:0%   0%, 50%  50%,100%  50%}
+    40%{background-position:0% 100%, 50%   0%,100%  50%}
+    60%{background-position:0%  50%, 50% 100%,100%   0%}
+    80%{background-position:0%  50%, 50%  50%,100% 100%}
+}
+
+:root {
+  --bg-color-initials: #0590C8;
+  --bg-color-initials-hover: #0064cf;
+  --font-color-initials: #ffffff;
+  --background: #ffffff;
+  --background-chat: #ffffff;
+  --divider: #9FB2BF;
+  --regular-font-color: #102636;
+  --regular-label-color: #5F697C;
+  --background-hover: #f0f0f0;
+  --logo-color: #333;
+  --box-shadow: #00000026;
+  --body-border: #ffffff;
+  --font-color: #102636;
+  --icon-color: #5F697C;
+  --button-bg: #0590C8;
+  --button-font: #ffffff;
+  --pill-border: #5F697C;
+  --pill-hover: #0590C8;
+  --bd-font-family: Montserrat;
+  --file-area-border: #00355A;
+  --file-bubble: #9FB2BF;
+  --file-bubble-color: #102636;
+  --chat-bubble-bg: rgba(16, 38, 54,.25);
+  --button-secondary-bg: #00355A;
+  --white: #ffffff;
+  --launch: #FFD300;
+  --launch-font-color: #102636;
+  --positive-card: #00E8930D;
+  --positive-card-border: #d4edda;
+  --negative-card: #FF88800D;
+  --negative-card-border: #FF8880;
+}
+
+div.insights-dark {
+  --bg-color-initials: #0590C8;
+  --bg-color-initials-hover: #047faf;
+  --font-color-initials: #102636;
+  --background: #102636;
+  --background-chat: #000000;
+  --divider: #0590C8;
+  --regular-font-color: #f0f0f0;
+  --regular-label-color: #0590C8;
+  --background-hover: #143a55;
+  --logo-color: #CDE9F4;
+  --box-shadow: #00000026;
+  --body-border: #404040;
+  --font-color: #CDE9F4;
+  --icon-color: #0590C8;
+  --button-bg: #0590C8;
+  --button-font: #102636;
+  --pill-border: #0590C8;
+  --pill-hover: #0590C8;
+  --file-area-border: #ffffff;
+  --file-bubble: #0590C8;
+  --file-bubble-color: #CDE9F4;
+  --chat-bubble-bg: rgba(5, 144, 200,.25);
+  --button-secondary-bg: #0590C8;
+  --launch: #FFD300;
+  --launch-font-color: #102636;
+  --positive-card: #00E893C0;
+  --positive-card-border: #d4edda;
+  --negative-card: #FF8880A0;
+  --negative-card-border: #FF8880;
+}
+
+.tabs {
+  display: flex;
+  justify-content: start;
+  
+}
+
+.tab-link {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  padding: 14px 16px;
+  font-size: 18px;
+  cursor: pointer;
+  margin-right: 10px;
+  position: relative;
+  background-color: var(--background);
+  color: var(--font-color)
+}
+
+.tab-link.active {
+  font-weight: bolder;
+}
+
+.tab-link.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background-color: #102636;
+  border-radius: 2px;
+}
+
+.tab-content {
+  padding: 20px;
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
