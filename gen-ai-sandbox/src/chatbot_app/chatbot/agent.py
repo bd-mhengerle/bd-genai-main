@@ -86,7 +86,7 @@ class Agent:
     @retrying.retry(stop_max_attempt_number=3)
     def query_agent(self, query: str, return_tool_response: bool = True) -> Dict[str, Any]:
         """
-        Query the agent with the given input.
+        Query the agent with the given inputs.
 
         Args:
             query: The user's query string.
